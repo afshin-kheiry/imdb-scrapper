@@ -1,0 +1,22 @@
+FROM python:latest
+
+WORKDIR /home/app
+
+RUN apt update && apt upgrade -y
+RUN apt install -y cron
+
+COPY deployment/requirements/requirements.txt .
+
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+COPY core/base/scraper_cron /etc/cron.d/
+
+RUN chmod 0644 /etc/cron.d/scraper_cron
+
+RUN crontab /etc/cron.d/scraper_cron
+
+RUN touch /var/log/cron.log
+
+EXPOSE 8000

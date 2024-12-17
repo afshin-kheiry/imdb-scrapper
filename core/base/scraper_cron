@@ -1,0 +1,1 @@
+0 0 * * * cd /home/app && make start-scraping >> /var/log/cron.log 2>&1

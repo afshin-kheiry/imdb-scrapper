@@ -1,0 +1,68 @@
+version: "3.7"
+services:
+  db:
+    image: "postgres:12-alpine"
+    ports:
+      - 5432:5432
+    networks:
+      - imdb-movie-network
+    volumes:
+      - "imdb-movie_postgres:/var/lib/postgresql/data"
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/imdb-movie-postgres-passwd
+      - POSTGRES_USER_FILE=/run/secrets/imdb-movie-postgres-user
+      - POSTGRES_DB_FILE=/run/secrets/imdb-movie-postgres-db
+    secrets:
+      - imdb-movie-postgres-passwd
+      - imdb-movie-postgres-user
+      - imdb-movie-postgres-db
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  imdb-movie:
+    image: "imdb-movie:latest"
+    command: make start-project
+    ports:
+      - "8000:8000"
+    networks:
+      - imdb-movie-network
+    depends_on:
+      - db
+      - firefox
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 5
+
+  firefox:
+    image: "selenium/standalone-firefox:latest"
+    ports:
+      - 4444:4444
+    networks:
+      - imdb-movie-network
+    volumes:
+      - "/dev/shm:/dev/shm"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+
+networks:
+  imdb-movie-network:
+    #
+
+volumes:
+  imdb-movie_postgres:
+    external: true
+
+secrets:
+  imdb-movie-postgres-passwd:
+    external: true
+  imdb-movie-postgres-user:
+    external: true
+  imdb-movie-postgres-db:
+    external: true
